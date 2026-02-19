@@ -1,14 +1,37 @@
 /* Startseite: local ticket overview */
+const TICKET_RETENTION_DAYS = 7;
+
+function getTicketRetentionCutoffTs() {
+  const daysMs = TICKET_RETENTION_DAYS * 24 * 60 * 60 * 1000;
+  return Date.now() - daysMs;
+}
 
 function getTicketStorageKey() {
   const fil = inputs.filNr?.value.trim() || localStorage.getItem(SESSION_KEYS.filNr) || "unknown";
   return `tickets:${fil}`;
 }
 
+function pruneOldTickets(tickets) {
+  if (!Array.isArray(tickets) || !tickets.length) return [];
+
+  const cutoffTs = getTicketRetentionCutoffTs();
+  return tickets.filter(ticket => {
+    if (!ticket || typeof ticket !== "object") return false;
+    const createdTs = new Date(ticket.createdAt).getTime();
+    if (Number.isNaN(createdTs)) return true;
+    return createdTs >= cutoffTs;
+  });
+}
+
 function loadTickets() {
   try {
     const raw = localStorage.getItem(getTicketStorageKey());
-    return raw ? JSON.parse(raw) : [];
+    const parsed = raw ? JSON.parse(raw) : [];
+    const pruned = pruneOldTickets(parsed);
+    if (pruned.length !== parsed.length) {
+      localStorage.setItem(getTicketStorageKey(), JSON.stringify(pruned));
+    }
+    return pruned;
   } catch {
     return [];
   }
@@ -468,6 +491,20 @@ function markTicketDone(ticketEl) {
   if (toggleBtn) toggleBtn.textContent = "Nicht erledigt";
 }
 
+function markTicketUndone(ticketEl) {
+  ticketEl.classList.remove("is-done");
+  ticketEl.classList.remove("done");
+
+  const checkbox = ticketEl.querySelector(TICKET_STATUS_SELECTORS.checkbox);
+  if (checkbox) checkbox.checked = false;
+
+  const existingBadge = ticketEl.querySelector(TICKET_STATUS_SELECTORS.badge);
+  if (existingBadge) existingBadge.remove();
+
+  const toggleBtn = ticketEl.querySelector(".ticket-toggle");
+  if (toggleBtn) toggleBtn.textContent = "Erledigt";
+}
+
 function applyStatusesToDom(tickets) {
   if (!Array.isArray(tickets) || !tickets.length) return;
 
@@ -486,8 +523,11 @@ function applyStatusesToDom(tickets) {
     const lookupId = (ticket.ticketId || ticket.id || "").trim();
     if (!lookupId) return;
     const status = (statusMap.get(lookupId) || "").trim().toLowerCase();
-    if (status === "fertig" && !ticket.done) {
-      ticket.done = true;
+    if (!status) return;
+
+    const shouldBeDone = status === "fertig";
+    if (ticket.done !== shouldBeDone) {
+      ticket.done = shouldBeDone;
       hasLocalChanges = true;
     }
   });
@@ -504,7 +544,12 @@ function applyStatusesToDom(tickets) {
     const ticketId = (ticketEl.dataset.ticketId || "").trim();
     if (!ticketId) return;
     const status = (statusMap.get(ticketId) || "").trim().toLowerCase();
-    if (status === "fertig") markTicketDone(ticketEl);
+    if (!status) return;
+    if (status === "fertig") {
+      markTicketDone(ticketEl);
+    } else {
+      markTicketUndone(ticketEl);
+    }
   });
 }
 
