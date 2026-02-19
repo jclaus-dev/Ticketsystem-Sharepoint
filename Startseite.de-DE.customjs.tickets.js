@@ -36,9 +36,11 @@ function saveTickets(tickets) {
 
 function recordTicket(entry) {
   const tickets = loadTickets();
-  const ticketId = (entry?.ticketId || "").trim();
-  tickets.unshift({
-    id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+  const localId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const entryTicketId = typeof entry?.ticketId === "string" ? entry.ticketId.trim() : "";
+  const ticketId = entryTicketId || localId;
+  const createdTicket = {
+    id: localId,
     ticketId,
     createdAt: new Date().toISOString(),
     personalnummer: inputs.persNr?.value.trim() || "",
@@ -46,10 +48,12 @@ function recordTicket(entry) {
     done: false,
     typeKey: entry.typeKey || getTypeKeyFromName(entry.kachelname),
     ...entry
-  });
+  };
+  tickets.unshift(createdTicket);
   saveTickets(tickets);
   const openCount = tickets.filter(t => !t.done).length;
   updateTicketsTabLabel(openCount);
+  return createdTicket;
 }
 
 function formatDate(iso) {
@@ -175,7 +179,7 @@ function renderTickets() {
   const listEl = document.getElementById("ticketsList");
   const emptyEl = document.getElementById("ticketsEmpty");
   if (!listEl || !emptyEl) return;
-  startStatusPolling();
+  startTicketStatusPolling();
 
   const tickets = loadTickets();
   const statusFilter = currentTicketFilters.status;
@@ -447,6 +451,10 @@ async function fetchStatuses(ticketIds) {
   return Array.isArray(data?.tickets) ? data.tickets : [];
 }
 
+async function fetchTicketStatuses(ticketIds) {
+  return fetchStatuses(ticketIds);
+}
+
 function markTicketDone(ticketEl) {
   ticketEl.classList.add("is-done");
   ticketEl.classList.add("done");
@@ -454,14 +462,8 @@ function markTicketDone(ticketEl) {
   const checkbox = ticketEl.querySelector(TICKET_STATUS_SELECTORS.checkbox);
   if (checkbox) checkbox.checked = true;
 
-  let badge = ticketEl.querySelector(TICKET_STATUS_SELECTORS.badge);
-  if (!badge) {
-    badge = document.createElement("span");
-    badge.className = "ticket-done-badge done";
-    badge.textContent = "Fertig";
-    const info = ticketEl.querySelector(TICKET_STATUS_SELECTORS.info) || ticketEl;
-    info.appendChild(badge);
-  }
+  const existingBadge = ticketEl.querySelector(TICKET_STATUS_SELECTORS.badge);
+  if (existingBadge) existingBadge.remove();
   const toggleBtn = ticketEl.querySelector(".ticket-toggle");
   if (toggleBtn) toggleBtn.textContent = "Nicht erledigt";
 }
@@ -514,7 +516,7 @@ async function refreshTicketStatuses() {
 
   ticketStatusSyncRunning = true;
   try {
-    const tickets = await fetchStatuses(ticketIds);
+    const tickets = await fetchTicketStatuses(ticketIds);
     applyStatusesToDom(tickets);
   } catch (err) {
     console.warn("Ticket-Status-Sync fehlgeschlagen.", err);
@@ -527,6 +529,10 @@ function startStatusPolling() {
   refreshTicketStatuses();
   if (ticketStatusPollingTimer) return;
   ticketStatusPollingTimer = setInterval(refreshTicketStatuses, POLL_INTERVAL_MS);
+}
+
+function startTicketStatusPolling() {
+  startStatusPolling();
 }
 
 const initialTickets = loadTickets();
