@@ -64,6 +64,7 @@ let selectedTileIndex = 0;
 let twoEans = false;
 let passReason = "";
 let inputMode = "keyboard";
+let pendingCreateRequests = 0;
 
 const tiles = Array.from(document.querySelectorAll("#tileContainer .tile.clickable"));
 const popup = document.getElementById("customPopup");
@@ -262,24 +263,39 @@ async function sendPlannerTicket(data = {}) {
     payload.reasons = data.reasons;
   }
 
-  const res = await fetch(API_URL, {
-    method:  "POST",
-    headers: { "Content-Type": "application/json" },
-    body:    JSON.stringify(payload)
-  });
-  const resText = await res.text();
-  if (!res.ok) {
-    const isCreate = payload.action === "create";
-    const isSoftFlow500 = res.status >= 500 && /InternalServerError/i.test(resText || "");
-    if (isCreate && isSoftFlow500) {
-      syncCreatedTicketIdsToLocal(payload, resText);
-      console.warn("Flow returned 5xx after create action; suppressing UI error.", res.status, resText);
-      return resText;
-    }
-    throw new Error(`Status ${res.status}: ${resText}`);
+  const isCreateAction = payload.action === "create";
+  if (isCreateAction) {
+    pendingCreateRequests += 1;
+    setSendingIndicatorVisible(true);
+    await waitForUiPaint();
   }
-  syncCreatedTicketIdsToLocal(payload, resText);
-  return resText;
+
+  try {
+    const res = await fetch(API_URL, {
+      method:  "POST",
+      headers: { "Content-Type": "application/json" },
+      body:    JSON.stringify(payload)
+    });
+    const resText = await res.text();
+    if (!res.ok) {
+      const isSoftFlow500 = res.status >= 500 && /InternalServerError/i.test(resText || "");
+      if (isCreateAction && isSoftFlow500) {
+        syncCreatedTicketIdsToLocal(payload, resText);
+        console.warn("Flow returned 5xx after create action; suppressing UI error.", res.status, resText);
+        return resText;
+      }
+      throw new Error(`Status ${res.status}: ${resText}`);
+    }
+    syncCreatedTicketIdsToLocal(payload, resText);
+    return resText;
+  } finally {
+    if (isCreateAction) {
+      pendingCreateRequests = Math.max(0, pendingCreateRequests - 1);
+      if (pendingCreateRequests === 0) {
+        setSendingIndicatorVisible(false);
+      }
+    }
+  }
 }
 
 async function createTicket(payload = {}) {
@@ -314,4 +330,41 @@ function showToast(message) {
     toast.classList.remove("is-visible");
     setTimeout(() => toast.remove(), 250);
   }, 4000);
+}
+
+function ensureSendingIndicator() {
+  let el = document.getElementById("ticketSendingIndicator");
+  if (el) return el;
+
+  el = document.createElement("div");
+  el.id = "ticketSendingIndicator";
+  el.textContent = "Ticket wird gesendet...";
+  el.style.position = "fixed";
+  el.style.left = "50%";
+  el.style.bottom = "16px";
+  el.style.transform = "translateX(-50%)";
+  el.style.zIndex = "100000";
+  el.style.padding = "8px 14px";
+  el.style.borderRadius = "999px";
+  el.style.border = "1px solid #6a7b6a";
+  el.style.background = "rgba(20, 28, 20, 0.92)";
+  el.style.color = "#f4fff4";
+  el.style.fontSize = "12px";
+  el.style.fontWeight = "700";
+  el.style.letterSpacing = "0.2px";
+  el.style.display = "none";
+  document.body.appendChild(el);
+  return el;
+}
+
+function setSendingIndicatorVisible(visible) {
+  const el = ensureSendingIndicator();
+  if (!el) return;
+  el.style.display = visible ? "block" : "none";
+}
+
+function waitForUiPaint() {
+  return new Promise(resolve => {
+    requestAnimationFrame(() => resolve());
+  });
 }
