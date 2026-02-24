@@ -35,7 +35,6 @@ buttons.mboardConfirm.addEventListener("click", async e => {
   }
 
   try {
-    showView("tile");
     await sendPlannerTicket({
       kachelname: "Mboard Probleme",
       text

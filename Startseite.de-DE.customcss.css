@@ -792,28 +792,6 @@ body.keyboard-mode .tile.clickable:hover:not(.keyboard-selected) {
   box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.2);
 }
 
-.ticket-card.done.is-delete-selected {
-  background: #ffd7d7 !important;
-  border-color: #b01717 !important;
-  box-shadow: inset 0 0 0 2px rgba(176, 23, 23, 0.15);
-}
-
-.ticket-card.done.is-delete-selected .ticket-title,
-.ticket-card.done.is-delete-selected .ticket-meta,
-.ticket-card.done.is-delete-selected .ticket-details-list {
-  color: #4a0909 !important;
-}
-
-.ticket-card.is-delete-selected {
-  opacity: 1 !important;
-}
-
-.ticket-card.done.is-delete-selected .ticket-toggle {
-  background: #ffecec !important;
-  color: #4a0909 !important;
-  border: 2px solid rgba(176, 23, 23, 0.35) !important;
-}
-
 .ticket-info {
   display: flex;
   flex-direction: column;
@@ -957,42 +935,4 @@ body.keyboard-mode .tile.clickable:hover:not(.keyboard-selected) {
     max-width: none;
     margin: 20px auto 40px;
   }
-}
-.ticket-card.is-done {
-  opacity: 0.6;
-}
-
-.ticket-card.is-done .ticket-title {
-  text-decoration: line-through;
-}
-
-.ticket-done-badge {
-  display: inline-block;
-  margin-top: 6px;
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: 12px;
-  line-height: 1.3;
-}
-
-.ticket-done-badge.done {
-  background: #e8f5e9;
-  color: #1f7a3f;
-  border: 1px solid #b9e6c5;
-}
-
-/* Delete selection must win over done/finished styling */
-#containerTickets .ticket-card.is-delete-mode.is-delete-selected,
-#containerTickets .ticket-card.done.is-delete-mode.is-delete-selected,
-#containerTickets .ticket-card.is-done.is-delete-mode.is-delete-selected {
-  background: #ffd7d7 !important;
-  border-color: #b01717 !important;
-  box-shadow: inset 0 0 0 2px rgba(176, 23, 23, 0.25) !important;
-  opacity: 1 !important;
-}
-
-#containerTickets .ticket-card.is-delete-mode.is-delete-selected .ticket-title,
-#containerTickets .ticket-card.is-delete-mode.is-delete-selected .ticket-meta,
-#containerTickets .ticket-card.is-delete-mode.is-delete-selected .ticket-details-list {
-  color: #4a0909 !important;
 }

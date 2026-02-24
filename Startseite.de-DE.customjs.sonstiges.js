@@ -34,7 +34,6 @@ buttons.sonstConfirm.addEventListener("click", async e => {
     });
   }
   try {
-    showView("tile");
     await sendPlannerTicket({
       kachelname: "Sonstiges Anliegen",
       text

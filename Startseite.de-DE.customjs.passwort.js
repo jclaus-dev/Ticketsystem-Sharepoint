@@ -20,7 +20,6 @@ Array.from(containers.pass1.querySelectorAll(".passwort-reason")).forEach(btn =>
         });
       }
 
-      showView("tile");
       sendPlannerTicket({
         kachelname: "Zalando Passwort zurücksetzen",
         reason:     passReason,
@@ -33,7 +32,6 @@ Array.from(containers.pass1.querySelectorAll(".passwort-reason")).forEach(btn =>
         .catch(err => {
           console.error("Fehler beim direkten Passwort-Reset-Ticket:", err);
           alert("Fehler beim Absenden: " + err.message);
-          showView("pass1");
         })
         .finally(() => {
           hasSent = false;
@@ -177,7 +175,6 @@ buttons.passConfirm.addEventListener("click", async e => {
   }
 
   try {
-    showView("tile");
     await sendPlannerTicket({
       kachelname: "Zalando Passwort zurücksetzen",
       reason:     passReason,
@@ -190,7 +187,6 @@ buttons.passConfirm.addEventListener("click", async e => {
   } catch (err) {
     console.error("Fehler beim Passwort-Reset:", err);
     alert("Fehler beim Passwort-Reset: " + err.message);
-    showView("pass2");
   } finally {
     hasSent = false;
   }
