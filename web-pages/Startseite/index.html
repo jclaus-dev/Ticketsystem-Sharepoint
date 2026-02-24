@@ -124,12 +124,22 @@
         border-radius: 6px;
       }
     
+      #filialnummer.is-invalid {
+        border: 2px solid red !important;
+      }
+
       #saveBtn {
         padding: 10px 20px;
         font-size: 16px;
         border-radius: 6px;
         cursor: pointer;
         margin-top: 23.5px;
+        min-width: 132px;
+        border: 2px solid #111;
+        box-sizing: border-box;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
       }
 
       #resetBtn {
@@ -139,6 +149,24 @@
         cursor: pointer;
         margin-top: 23.5px;
         background: #e6e6e6;
+        min-width: 132px;
+        border: 2px solid #111;
+        box-sizing: border-box;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      #resetBtn.is-ready {
+        background: ButtonFace;
+        color: ButtonText;
+        border: 2px solid #111;
+      }
+
+      #saveBtn:disabled {
+        border-color: #9a9a9a;
+        color: #8f8f8f;
+        cursor: not-allowed;
       }
 
       /* ================ Handbuch ================= */
@@ -654,7 +682,7 @@
               <button class="filter-button" type="button" data-filter-group="type" data-filter-value="mboard">Mboard Probleme</button>
               <button id="ticketsDeleteBtn" class="filter-button" type="button">Löschen</button>
               <div class="ticket-search">
-                <input id="ticketSearchInput" type="text" placeholder="Suche im Ticket..." autocomplete="off" />
+                <input id="ticketSearchInput" type="text" placeholder="Suche..." autocomplete="off" />
               </div>
               <button id="ticketsExportBtn" class="filter-button" type="button">Als Excel herunterladen</button>
             </div>

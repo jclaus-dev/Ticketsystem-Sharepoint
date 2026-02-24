@@ -190,6 +190,21 @@ function extractFlowIds(rawResponse) {
   return { ticketId, plannerTaskId };
 }
 
+function inferLocalCreateTicketId(payload) {
+  if (typeof loadTickets !== "function") return "";
+  const tickets = loadTickets();
+  if (!Array.isArray(tickets) || !tickets.length) return "";
+
+  const match = tickets.find(ticket =>
+    (ticket.kachelname || "") === (payload.kachelname || "") &&
+    String(ticket.personalnummer || "") === String(payload.personalnummer || "") &&
+    String(ticket.filialnummer || "") === String(payload.filialnummer || "")
+  );
+
+  if (!match) return "";
+  return String(match.ticketId || match.id || "").trim();
+}
+
 function syncCreatedTicketIdsToLocal(payload, flowResponseText) {
   if (payload?.action !== "create") return;
   if (typeof loadTickets !== "function" || typeof saveTickets !== "function") return;
@@ -201,11 +216,17 @@ function syncCreatedTicketIdsToLocal(payload, flowResponseText) {
   if (!Array.isArray(tickets) || !tickets.length) return;
 
   let idx = tickets.findIndex(ticket =>
+    String(payload.ticketId || "").trim() &&
+    String(ticket.ticketId || ticket.id || "").trim() === String(payload.ticketId || "").trim()
+  );
+  if (idx < 0) {
+    idx = tickets.findIndex(ticket =>
     !String(ticket.ticketId || "").trim() &&
     (ticket.kachelname || "") === (payload.kachelname || "") &&
     String(ticket.personalnummer || "") === String(payload.personalnummer || "") &&
     String(ticket.filialnummer || "") === String(payload.filialnummer || "")
-  );
+    );
+  }
   if (idx < 0) {
     idx = tickets.findIndex(ticket => !String(ticket.ticketId || "").trim());
   }
@@ -225,9 +246,14 @@ async function sendPlannerTicket(data = {}) {
     filialnummer:   data.filialnummer || inputs.filNr.value.trim()
   };
 
-  ["gutscheincode", "gutscheinwert", "orderId", "reason", "password", "text"].forEach(key => {
+  ["gutscheincode", "gutscheinwert", "orderId", "reason", "password", "text", "ticketId"].forEach(key => {
     if (data[key]) payload[key] = data[key];
   });
+
+  if (payload.action === "create" && !String(payload.ticketId || "").trim()) {
+    const inferredTicketId = inferLocalCreateTicketId(payload);
+    if (inferredTicketId) payload.ticketId = inferredTicketId;
+  }
 
   if (Array.isArray(data.eans)) {
     payload.eans = data.eans;
@@ -254,6 +280,21 @@ async function sendPlannerTicket(data = {}) {
   }
   syncCreatedTicketIdsToLocal(payload, resText);
   return resText;
+}
+
+async function createTicket(payload = {}) {
+  const responseText = await sendPlannerTicket({
+    ...payload,
+    action: "create"
+  });
+  const parsed = tryParseJson(responseText) || {};
+  const ids = extractFlowIds(parsed);
+  return {
+    result: firstStringValue(parsed, ["result", "status"]) || "created",
+    ticketId: ids.ticketId || "",
+    plannerTaskId: ids.plannerTaskId || "",
+    raw: parsed
+  };
 }
 
 function showToast(message) {

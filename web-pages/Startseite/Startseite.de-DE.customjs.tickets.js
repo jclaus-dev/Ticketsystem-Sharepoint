@@ -1,14 +1,37 @@
 /* Startseite: local ticket overview */
+const TICKET_RETENTION_DAYS = 7;
+
+function getTicketRetentionCutoffTs() {
+  const daysMs = TICKET_RETENTION_DAYS * 24 * 60 * 60 * 1000;
+  return Date.now() - daysMs;
+}
 
 function getTicketStorageKey() {
   const fil = inputs.filNr?.value.trim() || localStorage.getItem(SESSION_KEYS.filNr) || "unknown";
   return `tickets:${fil}`;
 }
 
+function pruneOldTickets(tickets) {
+  if (!Array.isArray(tickets) || !tickets.length) return [];
+
+  const cutoffTs = getTicketRetentionCutoffTs();
+  return tickets.filter(ticket => {
+    if (!ticket || typeof ticket !== "object") return false;
+    const createdTs = new Date(ticket.createdAt).getTime();
+    if (Number.isNaN(createdTs)) return true;
+    return createdTs >= cutoffTs;
+  });
+}
+
 function loadTickets() {
   try {
     const raw = localStorage.getItem(getTicketStorageKey());
-    return raw ? JSON.parse(raw) : [];
+    const parsed = raw ? JSON.parse(raw) : [];
+    const pruned = pruneOldTickets(parsed);
+    if (pruned.length !== parsed.length) {
+      localStorage.setItem(getTicketStorageKey(), JSON.stringify(pruned));
+    }
+    return pruned;
   } catch {
     return [];
   }
@@ -36,9 +59,11 @@ function saveTickets(tickets) {
 
 function recordTicket(entry) {
   const tickets = loadTickets();
-  const ticketId = (entry?.ticketId || "").trim();
-  tickets.unshift({
-    id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+  const localId = `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+  const entryTicketId = typeof entry?.ticketId === "string" ? entry.ticketId.trim() : "";
+  const ticketId = entryTicketId || localId;
+  const createdTicket = {
+    id: localId,
     ticketId,
     createdAt: new Date().toISOString(),
     personalnummer: inputs.persNr?.value.trim() || "",
@@ -46,10 +71,12 @@ function recordTicket(entry) {
     done: false,
     typeKey: entry.typeKey || getTypeKeyFromName(entry.kachelname),
     ...entry
-  });
+  };
+  tickets.unshift(createdTicket);
   saveTickets(tickets);
   const openCount = tickets.filter(t => !t.done).length;
   updateTicketsTabLabel(openCount);
+  return createdTicket;
 }
 
 function formatDate(iso) {
@@ -175,7 +202,7 @@ function renderTickets() {
   const listEl = document.getElementById("ticketsList");
   const emptyEl = document.getElementById("ticketsEmpty");
   if (!listEl || !emptyEl) return;
-  startStatusPolling();
+  startTicketStatusPolling();
 
   const tickets = loadTickets();
   const statusFilter = currentTicketFilters.status;
@@ -267,20 +294,6 @@ function renderTickets() {
         renderTickets();
       }
     });
-    const toggleBtn = document.createElement("button");
-    toggleBtn.type = "button";
-    toggleBtn.className = "ticket-toggle";
-    toggleBtn.textContent = ticket.done ? "Nicht erledigt" : "Erledigt";
-    toggleBtn.addEventListener("click", () => {
-      const all = loadTickets();
-      const ticketIndex = all.findIndex(t => t.id === ticket.id);
-      if (ticketIndex >= 0) {
-        all[ticketIndex].done = !all[ticketIndex].done;
-        saveTickets(all);
-        renderTickets();
-      }
-    });
-    actions.appendChild(toggleBtn);
     actions.appendChild(fav);
 
     if (deleteModeActive) {
@@ -447,6 +460,10 @@ async function fetchStatuses(ticketIds) {
   return Array.isArray(data?.tickets) ? data.tickets : [];
 }
 
+async function fetchTicketStatuses(ticketIds) {
+  return fetchStatuses(ticketIds);
+}
+
 function markTicketDone(ticketEl) {
   ticketEl.classList.add("is-done");
   ticketEl.classList.add("done");
@@ -454,16 +471,20 @@ function markTicketDone(ticketEl) {
   const checkbox = ticketEl.querySelector(TICKET_STATUS_SELECTORS.checkbox);
   if (checkbox) checkbox.checked = true;
 
-  let badge = ticketEl.querySelector(TICKET_STATUS_SELECTORS.badge);
-  if (!badge) {
-    badge = document.createElement("span");
-    badge.className = "ticket-done-badge done";
-    badge.textContent = "Fertig";
-    const info = ticketEl.querySelector(TICKET_STATUS_SELECTORS.info) || ticketEl;
-    info.appendChild(badge);
-  }
-  const toggleBtn = ticketEl.querySelector(".ticket-toggle");
-  if (toggleBtn) toggleBtn.textContent = "Nicht erledigt";
+  const existingBadge = ticketEl.querySelector(TICKET_STATUS_SELECTORS.badge);
+  if (existingBadge) existingBadge.remove();
+}
+
+function markTicketUndone(ticketEl) {
+  ticketEl.classList.remove("is-done");
+  ticketEl.classList.remove("done");
+
+  const checkbox = ticketEl.querySelector(TICKET_STATUS_SELECTORS.checkbox);
+  if (checkbox) checkbox.checked = false;
+
+  const existingBadge = ticketEl.querySelector(TICKET_STATUS_SELECTORS.badge);
+  if (existingBadge) existingBadge.remove();
+
 }
 
 function applyStatusesToDom(tickets) {
@@ -484,8 +505,11 @@ function applyStatusesToDom(tickets) {
     const lookupId = (ticket.ticketId || ticket.id || "").trim();
     if (!lookupId) return;
     const status = (statusMap.get(lookupId) || "").trim().toLowerCase();
-    if (status === "fertig" && !ticket.done) {
-      ticket.done = true;
+    if (!status) return;
+
+    const shouldBeDone = status === "fertig";
+    if (ticket.done !== shouldBeDone) {
+      ticket.done = shouldBeDone;
       hasLocalChanges = true;
     }
   });
@@ -502,7 +526,12 @@ function applyStatusesToDom(tickets) {
     const ticketId = (ticketEl.dataset.ticketId || "").trim();
     if (!ticketId) return;
     const status = (statusMap.get(ticketId) || "").trim().toLowerCase();
-    if (status === "fertig") markTicketDone(ticketEl);
+    if (!status) return;
+    if (status === "fertig") {
+      markTicketDone(ticketEl);
+    } else {
+      markTicketUndone(ticketEl);
+    }
   });
 }
 
@@ -514,7 +543,7 @@ async function refreshTicketStatuses() {
 
   ticketStatusSyncRunning = true;
   try {
-    const tickets = await fetchStatuses(ticketIds);
+    const tickets = await fetchTicketStatuses(ticketIds);
     applyStatusesToDom(tickets);
   } catch (err) {
     console.warn("Ticket-Status-Sync fehlgeschlagen.", err);
@@ -529,6 +558,10 @@ function startStatusPolling() {
   ticketStatusPollingTimer = setInterval(refreshTicketStatuses, POLL_INTERVAL_MS);
 }
 
+function startTicketStatusPolling() {
+  startStatusPolling();
+}
+
 const initialTickets = loadTickets();
 const initialOpenCount = initialTickets.filter(t => !t.done).length;
 updateTicketsTabLabel(initialOpenCount);
@@ -536,7 +569,7 @@ updateTicketsTabLabel(initialOpenCount);
 const HANDBUCH_DATA = {
   mboard: {
     title: "M-board",
-    subtitle: "Handbuch fÜr M-board, Bestellungen und Versand",
+    subtitle: "Handbuch für M-board, Bestellungen und Versand",
     count: "6 Artikel",
     sections: [
       {
