@@ -717,6 +717,18 @@ body.keyboard-mode .tile.clickable:hover:not(.keyboard-selected) {
   margin: 4px 0 8px;
 }
 
+.tickets-legend {
+  color: #f4fff4;
+  background: rgba(70, 170, 75, 0.25);
+  border: 1px solid rgba(70, 170, 75, 0.7);
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  align-self: flex-start;
+  margin: 0 0 8px;
+}
+
 .filter-group {
   display: flex;
   gap: 6px;

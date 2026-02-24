@@ -294,20 +294,6 @@ function renderTickets() {
         renderTickets();
       }
     });
-    const toggleBtn = document.createElement("button");
-    toggleBtn.type = "button";
-    toggleBtn.className = "ticket-toggle";
-    toggleBtn.textContent = ticket.done ? "Nicht erledigt" : "Erledigt";
-    toggleBtn.addEventListener("click", () => {
-      const all = loadTickets();
-      const ticketIndex = all.findIndex(t => t.id === ticket.id);
-      if (ticketIndex >= 0) {
-        all[ticketIndex].done = !all[ticketIndex].done;
-        saveTickets(all);
-        renderTickets();
-      }
-    });
-    actions.appendChild(toggleBtn);
     actions.appendChild(fav);
 
     if (deleteModeActive) {
@@ -487,8 +473,6 @@ function markTicketDone(ticketEl) {
 
   const existingBadge = ticketEl.querySelector(TICKET_STATUS_SELECTORS.badge);
   if (existingBadge) existingBadge.remove();
-  const toggleBtn = ticketEl.querySelector(".ticket-toggle");
-  if (toggleBtn) toggleBtn.textContent = "Nicht erledigt";
 }
 
 function markTicketUndone(ticketEl) {
@@ -501,8 +485,6 @@ function markTicketUndone(ticketEl) {
   const existingBadge = ticketEl.querySelector(TICKET_STATUS_SELECTORS.badge);
   if (existingBadge) existingBadge.remove();
 
-  const toggleBtn = ticketEl.querySelector(".ticket-toggle");
-  if (toggleBtn) toggleBtn.textContent = "Erledigt";
 }
 
 function applyStatusesToDom(tickets) {
