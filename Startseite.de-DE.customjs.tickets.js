@@ -412,7 +412,7 @@ if (buttons.handbuchTab) {
 // Ticket selector: .ticket-card[data-ticket-id]
 // Optional selectors for title/checkbox/badge in TICKET_STATUS_SELECTORS
 const FLOW_URL = (typeof API_URL === "string" && API_URL) || "{{HIER_DEINE_FLOW_HTTP_URL}}";
-const POLL_INTERVAL_MS = 30000;
+const POLL_INTERVAL_MS = 2 * 60 * 60 * 1000;
 
 const TICKET_STATUS_SELECTORS = {
   ticket: ".ticket-card[data-ticket-id]",
