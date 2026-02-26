@@ -122,11 +122,18 @@ async function fetchBannerValue() {
       return null;
     }
     const res = await fetch(BANNER_ENDPOINT_URL, {
-      method: "GET",
-      headers: { Accept: "application/json" },
+      method: "POST",
+      headers: {
+        Accept: "application/json, text/plain;q=0.9, */*;q=0.8",
+        "Content-Type": "application/json"
+      },
+      body: "{}",
       cache: "no-store"
     });
-    if (!res.ok) throw new Error(`Endpoint Status ${res.status}`);
+    if (!res.ok) {
+      const errText = await res.text();
+      throw new Error(`Endpoint Status ${res.status} ${res.statusText} - ${errText.slice(0, 300)}`);
+    }
     const raw = await res.text();
     const trimmed = raw.trim();
     if (!trimmed) return "";
