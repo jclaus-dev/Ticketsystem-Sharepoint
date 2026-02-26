@@ -60,6 +60,7 @@ const DAILY_RELOAD_KEY = "dailyReloadDate";
 const MORNING_RELOAD_HOUR = 5;
 let bannerPollingTimer = null;
 let bannerRequestInFlight = false;
+let lastBannerValue = null;
 
 function getTodayLocalDate() {
   const now = new Date();
@@ -99,6 +100,23 @@ function renderBannerValue(value) {
   } else {
     targetEl.textContent = text;
   }
+  lastBannerValue = text;
+}
+
+function getCurrentBannerValue() {
+  if (lastBannerValue !== null) return lastBannerValue;
+  const infoTextEl = document.getElementById("infoText");
+  if (infoTextEl) {
+    lastBannerValue = (infoTextEl.textContent || "").trim();
+    return lastBannerValue;
+  }
+  const bannerEl = document.getElementById("infoBanner");
+  if (bannerEl) {
+    lastBannerValue = (bannerEl.textContent || "").trim();
+    return lastBannerValue;
+  }
+  lastBannerValue = "";
+  return lastBannerValue;
 }
 
 function parseSharePointBannerValue(data) {
@@ -170,7 +188,11 @@ async function loadBanner() {
   try {
     const value = await fetchBannerValue();
     if (value === null || value === undefined) return;
-    renderBannerValue(value);
+    const nextValue = typeof value === "string" ? value.trim() : "";
+    const currentValue = getCurrentBannerValue();
+    if (nextValue !== currentValue) {
+      renderBannerValue(nextValue);
+    }
   } catch (err) {
     console.warn("Info-Banner konnte nicht geladen werden.", err);
   } finally {
