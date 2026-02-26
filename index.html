@@ -584,12 +584,148 @@
     
         .user-fields {
           flex-wrap: wrap;
+          justify-content: center;
+          align-items: flex-end;
           gap: 10px;
+          width: 100%;
+        }
+
+        .form-field {
+          align-items: flex-start;
         }
     
         .form-field input {
-          flex: 1 1 120px;
-          max-width: 180px;
+          flex: 0 0 auto;
+          width: 150px;
+          max-width: 150px;
+          height: 40px;
+          padding: 8px;
+          font-size: 14px;
+        }
+
+        #saveBtn,
+        #resetBtn {
+          margin-top: 0;
+          min-width: 112px;
+          height: 40px;
+          padding: 8px 12px;
+          font-size: 14px;
+        }
+      }
+
+      /* ================ Kompaktlayout ab 1430px und für 4:3 ========== */
+      @media (max-width: 1430px), (max-aspect-ratio: 4/3) {
+        .main-navbar {
+          padding: 0.65rem 1.2rem;
+        }
+
+        .logo-link img {
+          height: 32px;
+        }
+
+        .filial-name {
+          font-size: 1.1rem;
+        }
+
+        .center-content {
+          padding-top: 16px !important;
+          padding-bottom: 16px !important;
+        }
+
+        .info-banner {
+          width: 94% !important;
+          margin: 0 auto 14px !important;
+          padding: 10px 14px !important;
+          gap: 12px !important;
+        }
+
+        #infoText {
+          font-size: 16px !important;
+          line-height: 1.25 !important;
+        }
+
+        .user-fields-wrapper {
+          width: 96% !important;
+          max-width: 980px !important;
+          margin: 0 auto 12px !important;
+          justify-content: center !important;
+          gap: 8px !important;
+        }
+
+        .tab-strip {
+          width: 100%;
+          justify-content: center;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+
+        .tab-button {
+          min-height: 34px;
+          padding: 6px 12px;
+          font-size: 14px;
+        }
+
+        .user-fields {
+          width: 100%;
+          justify-content: center;
+          align-items: flex-end;
+          flex-wrap: wrap;
+          gap: 8px;
+        }
+
+        .form-field label {
+          font-size: 12px;
+          margin-bottom: 2px;
+        }
+
+        .form-field input {
+          width: 140px;
+          font-size: 14px;
+          padding: 8px;
+        }
+
+        #saveBtn,
+        #resetBtn {
+          min-width: 112px;
+          height: 40px;
+          margin-top: 0;
+          padding: 8px 12px;
+          font-size: 14px;
+        }
+
+        #tileContainer {
+          max-width: 900px !important;
+          margin: 10px auto 16px !important;
+          padding: 0 8px !important;
+          gap: 14px !important;
+        }
+
+        #tileContainer .tile {
+          flex: 0 1 calc(50% - 7px) !important;
+          height: 175px !important;
+          padding: 12px 10px !important;
+        }
+
+        #tileContainer .tile img {
+          width: 46px !important;
+          height: 46px !important;
+          margin-bottom: 8px !important;
+        }
+
+        #tileContainer .tile strong {
+          font-size: 15px !important;
+        }
+
+        .tile.clickable:hover,
+        .tile.clickable.keyboard-selected {
+          transform: scale(1.03) !important;
+        }
+
+        .footer-contact {
+          position: static !important;
+          padding: 10px 12px 12px !important;
+          font-size: 14px !important;
+          margin-top: 4px;
         }
       }
     </style>
@@ -693,16 +829,16 @@
       </div>
       <div id="containerHandbuch" class="handbuch-container">
         <div class="handbuch-hero">
-          <h1 class="handbuch-title">Ratschläge und Antworten vom Michelberger Digital-Team</h1>
+          <h1 class="handbuch-title">Wissendatenbank Online Team</h1>
           <div class="handbuch-search">
             <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
               <path fill="currentColor" d="M11 2a9 9 0 1 0 5.657 15.657l4.243 4.243 1.414-1.414-4.243-4.243A9 9 0 0 0 11 2zm0 2a7 7 0 1 1-4.95 11.95A7 7 0 0 1 11 4z"/>
             </svg>
-            <input id="handbuchStartSearchInput" type="text" placeholder="Nach Artikeln suchen ..." autocomplete="off" />
+            <input id="handbuchStartSearchInput" type="text" placeholder="Nach Beitraegen suchen ..." autocomplete="off" />
           </div>
         </div>
         <div id="handbuchStartResults" class="handbuch-start-results">
-          <div class="handbuch-start-results-header">Gefundene Artikel</div>
+          <div class="handbuch-start-results-header">Gefundene Beitraege</div>
           <div id="handbuchStartResultsList"></div>
         </div>
         <div class="handbuch-list">
@@ -715,7 +851,7 @@
             <div>
               <h3>M-board</h3>
               <p>Handbuch f&uuml;r M-board, Bestellungen und Versand</p>
-              <div class="handbuch-meta">6 Artikel</div>
+              <div class="handbuch-meta">6 Beitraege</div>
             </div>
           </div>
           <div class="handbuch-card is-clickable" data-handbuch-id="zalando">
@@ -727,7 +863,7 @@
             <div>
               <h3>Zalando</h3>
               <p>Handbuch für Zalando</p>
-              <div class="handbuch-meta">7 Artikel</div>
+              <div class="handbuch-meta">7 Beitraege</div>
             </div>
           </div>
           <div class="handbuch-card is-clickable" data-handbuch-id="umtausch">
@@ -739,7 +875,7 @@
             <div>
               <h3>Stationäres Geschäft</h3>
               <p>Alles rund um Stationäres Geschäft</p>
-              <div class="handbuch-meta">2 Artikel</div>
+              <div class="handbuch-meta">2 Beitraege</div>
             </div>
           </div>
           <div class="handbuch-card is-clickable" data-handbuch-id="abschliessen">
@@ -751,7 +887,7 @@
             <div>
               <h3>Abschließen der Bestellungen (Zalando &amp; M-board)</h3>
               <p>Bestellungen t&auml;glich abschließen</p>
-              <div class="handbuch-meta">1 Artikel</div>
+              <div class="handbuch-meta">1 Beitrag</div>
             </div>
           </div>
           <div class="handbuch-card is-clickable" data-handbuch-id="irics">
@@ -763,7 +899,7 @@
             <div>
               <h3>Irics</h3>
               <p>Irics Grundlagen</p>
-              <div class="handbuch-meta">3 Artikel</div>
+              <div class="handbuch-meta">3 Beitraege</div>
             </div>
           </div>
           <div class="handbuch-card is-clickable" data-handbuch-id="paketversand">
@@ -775,7 +911,7 @@
             <div>
               <h3>Paketversand</h3>
               <p>Artikel pr&uuml;fen &amp; richtig verpacken</p>
-              <div class="handbuch-meta">2 Artikel</div>
+              <div class="handbuch-meta">2 Beitraege</div>
             </div>
           </div>
           <div class="handbuch-card is-clickable" data-handbuch-id="onlineshop">
@@ -787,7 +923,7 @@
             <div>
               <h3>Onlineshop Bestellungen</h3>
               <p>Priorisierung &amp; Verpackung</p>
-              <div class="handbuch-meta">2 Artikel</div>
+              <div class="handbuch-meta">2 Beitraege</div>
             </div>
           </div>
         </div>
@@ -797,7 +933,7 @@
           <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true">
             <path fill="currentColor" d="M11 2a9 9 0 1 0 5.657 15.657l4.243 4.243 1.414-1.414-4.243-4.243A9 9 0 0 0 11 2zm0 2a7 7 0 1 1-4.95 11.95A7 7 0 0 1 11 4z"/>
           </svg>
-          <input id="handbuchSearchInput" type="text" placeholder="Nach Artikeln suchen ..." autocomplete="off" />
+          <input id="handbuchSearchInput" type="text" placeholder="Nach Beitraegen suchen ..." autocomplete="off" />
         </div>
         <div class="handbuch-breadcrumb">
           <a href="#" id="handbuchBackLink">Alle Kollektionen</a> &nbsp;›&nbsp; <span id="handbuchCrumb">M-board</span>
@@ -810,7 +946,7 @@
           </div>
           <h2 id="handbuchTitle" class="handbuch-detail-title">M-board</h2>
           <div id="handbuchSub" class="handbuch-detail-sub">Alle wichtigen M-board Funktionen</div>
-          <div id="handbuchCount" class="handbuch-detail-count">28 Artikel</div>
+          <div id="handbuchCount" class="handbuch-detail-count">28 Beitraege</div>
         </div>
         <div id="handbuchSections"></div>
       </div>
@@ -962,9 +1098,9 @@
           <!-- Neuer Pfeil-Button -->
           <div class="arrow-controls" style="margin-top: 20px;">
             <button id="reasonPrev2" type="button"
-              style="font-size: 60px; background: none; border: none; cursor: pointer;">&#8592;</button>
+              style="font-size: 40px; background: none; border: none; cursor: pointer;">&#8592;</button>
             <button id="confirmReasonBtn2" type="button"
-              style="font-size: 60px; border: none; background: none; color: white; cursor: pointer;">→</button>
+              style="font-size: 40px; border: none; background: none; color: white; cursor: pointer;">→</button>
           </div>
         </div>
     
@@ -1078,3 +1214,4 @@
 
 </body>
 </html>
+

@@ -165,6 +165,7 @@ function initTicketFilters() {
         currentTicketFilters[group] = value;
         currentTicketFilters.favorite = "all";
         updateFilterButtons("status", currentTicketFilters.status);
+        updateFilterButtons("type", currentTicketFilters.type);
         updateFilterButtons("favorite", currentTicketFilters.favorite);
       }
       renderTickets();
@@ -570,7 +571,7 @@ const HANDBUCH_DATA = {
   mboard: {
     title: "M-board",
     subtitle: "Handbuch für M-board, Bestellungen und Versand",
-    count: "6 Artikel",
+    count: "6 Beitraege",
     sections: [
       {
         title: "Grundlagen",
@@ -588,7 +589,7 @@ const HANDBUCH_DATA = {
   zalando: {
     title: "Zalando",
     subtitle: "Handbuch für Zalando",
-    count: "7 Artikel",
+    count: "7 Beitraege",
     sections: [
       {
         title: "Grundlagen",
@@ -607,7 +608,7 @@ const HANDBUCH_DATA = {
   umtausch: {
     title: "Stationäres Geschäft",
     subtitle: "Alles rund um Stationäres Geschäft",
-    count: "2 Artikel",
+    count: "2 Beitraege",
     sections: [
       {
         title: "Umtausch",
@@ -621,7 +622,7 @@ const HANDBUCH_DATA = {
   abschliessen: {
     title: "Abschließen der Bestellungen (Zalando & M-Board)",
     subtitle: "Bestellungen täglich abschließen",
-    count: "1 Artikel",
+    count: "1 Beitrag",
     sections: [
       {
         title: "Abschließen",
@@ -634,7 +635,7 @@ const HANDBUCH_DATA = {
   irics: {
     title: "Irics Grundlagen",
     subtitle: "Grundlagen",
-    count: "3 Artikel",
+    count: "3 Beitraege",
     sections: [
       {
         title: "Irics",
@@ -649,7 +650,7 @@ const HANDBUCH_DATA = {
   paketversand: {
     title: "Paketversand",
     subtitle: "Atrikel prüfen und Verpackung",
-    count: "2 Artikel",
+    count: "2 Beitraege",
     sections: [
       {
         title: "Bestellungen",
@@ -663,7 +664,7 @@ const HANDBUCH_DATA = {
   onlineshop: {
     title: "Onlineshop Bestellungen",
     subtitle: "Onlineshop Bestellungen & Verpackungen",
-    count: "2 Artikel",
+    count: "2 Beitraege",
     sections: [
       {
         title: "Onlineshop Bestellungen",
@@ -767,7 +768,7 @@ function renderHandbuchStartResults(query) {
   if (!items.length) {
     const empty = document.createElement("div");
     empty.className = "handbuch-start-result";
-    empty.textContent = "Keine passenden Artikel gefunden.";
+    empty.textContent = "Keine passenden Beitraege gefunden.";
     listWrap.appendChild(empty);
     return;
   }
