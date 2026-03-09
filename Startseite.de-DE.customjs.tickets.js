@@ -405,7 +405,6 @@ if (buttons.handbuchTab) {
 // Ticket selector: .ticket-card[data-ticket-id]
 // Optional selectors for title/checkbox/badge in TICKET_STATUS_SELECTORS
 const FLOW_URL = (typeof API_URL === "string" && API_URL) || "{{HIER_DEINE_FLOW_HTTP_URL}}";
-const POLL_INTERVAL_MS = 15 * 60 * 1000;
 const TICKET_REFRESH_MIN_OVERLAY_MS = 400;
 const TICKET_REFRESH_MAX_PROGRESS = 95;
 
@@ -418,7 +417,6 @@ const TICKET_STATUS_SELECTORS = {
   actionButtons: ".ticket-actions button"
 };
 
-let ticketStatusPollingTimer = null;
 let ticketStatusSyncRunning = false;
 let ticketRefreshProgressTimer = null;
 let ticketTabOpenInFlight = null;
@@ -527,7 +525,19 @@ async function fetchStatuses(ticketIds) {
   }
 
   const data = await res.json();
-  return Array.isArray(data?.tickets) ? data.tickets : [];
+  if (Array.isArray(data?.tickets)) return data.tickets;
+  if (Array.isArray(data?.body?.tickets)) return data.body.tickets;
+
+  if (typeof data?.body === "string") {
+    try {
+      const parsedBody = JSON.parse(data.body);
+      if (Array.isArray(parsedBody?.tickets)) return parsedBody.tickets;
+    } catch {
+      // ignore malformed body payload and fall back to empty list
+    }
+  }
+
+  return [];
 }
 
 async function fetchTicketStatuses(ticketIds) {
@@ -563,8 +573,8 @@ function applyStatusesToDom(tickets, options = {}) {
 
   const statusMap = new Map();
   tickets.forEach(item => {
-    const id = (item?.ticketId || "").trim();
-    const status = (item?.status || "").trim();
+    const id = (item?.ticketId || item?.TicketID || item?.ticketID || item?.id || "").trim();
+    const status = (item?.status || item?.Status || "").trim();
     if (id) statusMap.set(id, status);
   });
   if (!statusMap.size) return;
@@ -640,16 +650,8 @@ async function refreshTicketStatuses(options = {}) {
   }
 }
 
-function startStatusPolling() {
-  if (ticketStatusPollingTimer) return;
-  refreshTicketStatuses({ force: true, includeStorage: true, renderOnLocalChange: true });
-  ticketStatusPollingTimer = setInterval(() => {
-    refreshTicketStatuses({ force: true, includeStorage: true, renderOnLocalChange: true });
-  }, POLL_INTERVAL_MS);
-}
-
 function startTicketStatusPolling() {
-  startStatusPolling();
+  // Intentionally empty: Statusabfrage nur beim Öffnen der Ticketansicht.
 }
 
 async function openTicketsViewWithFreshSync() {
@@ -678,46 +680,11 @@ async function openTicketsViewWithFreshSync() {
   }
 }
 
-function warmupTicketStatuses() {
-  refreshTicketStatuses({
-    force: true,
-    includeStorage: true,
-    renderOnLocalChange: false
-  });
-}
-
 if (buttons.ticketsTab) {
   buttons.ticketsTab.addEventListener("click", () => {
     openTicketsViewWithFreshSync();
   });
-  buttons.ticketsTab.addEventListener("mouseenter", warmupTicketStatuses, { passive: true });
-  buttons.ticketsTab.addEventListener("focus", warmupTicketStatuses);
 }
-
-window.addEventListener("focus", () => {
-  refreshTicketStatuses({
-    force: true,
-    includeStorage: true,
-    renderOnLocalChange: true
-  });
-});
-
-window.addEventListener("online", () => {
-  refreshTicketStatuses({
-    force: true,
-    includeStorage: true,
-    renderOnLocalChange: true
-  });
-});
-
-document.addEventListener("visibilitychange", () => {
-  if (document.visibilityState !== "visible") return;
-  refreshTicketStatuses({
-    force: true,
-    includeStorage: true,
-    renderOnLocalChange: true
-  });
-});
 
 const initialTickets = loadTickets();
 const initialOpenCount = initialTickets.filter(t => !t.done).length;
